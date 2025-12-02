@@ -1,0 +1,104 @@
+/* src/App.css */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', 'Roboto', 
+    'Helvetica Neue', 'Arial', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #f5f5f7;
+  min-height: 100vh;
+}
+
+.app {
+  min-height: 100vh;
+  background: #f5f5f7;
+}
+
+/* Simple Fade In */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* macOS Style Hover */
+.macos-hover {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.macos-hover:hover {
+  transform: scale(1.02);
+}
+
+.macos-hover:active {
+  transform: scale(0.98);
+}
+
+/* Clean Button */
+.clean-button {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.clean-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.clean-button:active {
+  transform: translateY(0);
+}
+
+/* Fade Animation */
+.fade-in {
+  animation: fadeIn 0.3s ease;
+}
+
+/* Scrollbar Styling - Minimal */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d1d6;
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #8e8e93;
+}
+
+/* Focus Styles */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #E0C78F40;
+}
+
+/* Add this at the end of App.css */
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
