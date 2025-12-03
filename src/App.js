@@ -1,4 +1,4 @@
-// src/App.js - VERSION FINALE CERTIFIÉE (TRI URGENT + ROUTAGE)
+// src/App.js - FINAL CERTIFIED VERSION (URGENT SORTING + ROUTING)
 import React, { useState, useEffect } from "react";
 import {
   Home,
@@ -16,14 +16,14 @@ import {
   AlertTriangle,
   Layers,
   LayoutDashboard,
-  Clock, // Icône pour le Follow-up
+  Clock, // Icon for Follow-up
 } from "lucide-react";
 import "./App.css";
 
-// 🚨 URL DE PRODUCTION (À remplacer par ton URL Webhook n8n finale)
+// 🚨 PRODUCTION URL (Replace with your final n8n Webhook URL)
 const API_URL = "https://classiftest.app.n8n.cloud/webhook/tickets";
 
-// --- CONFIGURATION DU ROUTAGE (Selon Technical Doc p.2 & p.6) ---
+// --- ROUTING CONFIGURATION (According to Technical Doc p.2 & p.6) ---
 const departmentRouting = [
   {
     id: "housing",
@@ -34,7 +34,7 @@ const departmentRouting = [
   {
     id: "student_life",
     label: "Student Life",
-    categories: ["Food", "Transportation"], // Regroupe Food & Transport [cite: 110]
+    categories: ["Food", "Transportation"], // Groups Food & Transport
     icon: <Coffee size={18} />,
   },
   {
@@ -58,7 +58,7 @@ const departmentRouting = [
   {
     id: "general",
     label: "Front Desk",
-    categories: ["General"], // Cible spécifique pour le général [cite: 110]
+    categories: ["General"], // Specific target for general
     icon: <Inbox size={18} />,
   },
 ];
@@ -84,12 +84,12 @@ const categoryColors = {
 };
 
 const priorityColors = {
-  urgent: "#FF3B30", // Rouge
-  important: "#FF9500", // Jaune
-  low: "#34C759", // Vert
+  urgent: "#FF3B30", // Red
+  important: "#FF9500", // Yellow
+  low: "#34C759", // Green
 };
 
-// Données de secours (Mocks)
+// Backup Data (Mocks)
 const sampleEmails = [
   {
     id: "MOCK-1",
@@ -108,13 +108,13 @@ const sampleEmails = [
 ];
 
 function App() {
-  // --- ÉTATS (STATES) ---
+  // --- STATES ---
   const [emails, setEmails] = useState([]);
   const [selectedEmail, setSelectedEmail] = useState(null);
 
   // Navigation
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [currentView, setCurrentView] = useState("all_inbox"); // 'dashboard', 'all_inbox', ou ID dept
+  const [currentView, setCurrentView] = useState("all_inbox"); // 'dashboard', 'all_inbox', or dept ID
 
   // Modals
   const [showAutoReplyModal, setShowAutoReplyModal] = useState(false);
@@ -124,17 +124,17 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [backendStatus, setBackendStatus] = useState("unknown");
 
-  // --- LOGIQUE MÉTIER ---
+  // --- BUSINESS LOGIC ---
 
   const fetchRealEmails = async () => {
     setIsLoading(true);
     try {
-      console.log("🔄 Connexion à n8n:", API_URL);
+      console.log("🔄 Connecting to n8n:", API_URL);
       const response = await fetch(API_URL);
-      if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
+      if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
       const data = await response.json();
 
-      // Gestion structure n8n
+      // Handle n8n structure
       let items = [];
       if (Array.isArray(data) && data.length > 0 && data[0].data)
         items = data[0].data;
@@ -148,18 +148,18 @@ function App() {
 
       const transformedEmails = items.map((email, index) => ({
         id: email.ticket_id || `TEMP-${index}`,
-        from: email.from_email || "Inconnu",
-        subject: email.subject || "(Sans Objet)",
+        from: email.from_email || "Unknown",
+        subject: email.subject || "(No Subject)",
         fullContent: email.final_email_body || email.content || "...",
         category: email.category || "General",
         priority: (email.priority || "low").toLowerCase(),
         time: email.created_at
           ? new Date(email.created_at).toLocaleString()
-          : "Date inconnue",
+          : "Unknown Date",
         status: email.status === "DONE" ? "read" : "unread",
         ticketNumber: email.ticket_id || "N/A",
-        // Nouveaux champs IA
-        reasoning: email.reasoning || "Analyse en attente...",
+        // New AI fields
+        reasoning: email.reasoning || "Analysis pending...",
         suggestedDept: email.suggested_department || "General Desk",
         sentiment: email.sentiment || "Neutral",
       }));
@@ -167,7 +167,7 @@ function App() {
       setEmails(transformedEmails);
       setBackendStatus("connected");
     } catch (error) {
-      console.error("❌ Erreur:", error);
+      console.error("❌ Error:", error);
       setBackendStatus("disconnected");
       loadSampleEmails();
     } finally {
@@ -183,41 +183,39 @@ function App() {
     fetchRealEmails();
   }, []);
 
-  // --- ACTIONS UTILISATEUR ---
+  // --- USER ACTIONS ---
 
   const handleAutoReply = (email) => {
-    // Action: Auto-Reply (Info) [cite: 70]
-    setAutoReplyMessage(email.fullContent || "Pas de brouillon disponible.");
+    // Action: Auto-Reply (Info)
+    setAutoReplyMessage(email.fullContent || "No draft available.");
     setShowAutoReplyModal(true);
   };
 
   const handleFollowUp = (email) => {
-    // Action: Create Follow-Up [cite: 70]
-    alert(
-      `Ticket ${email.ticketNumber} mis en attente pour documents manquants.`
-    );
-    // TODO: Connecter à un webhook "Update Status -> PENDING_DOCS"
+    // Action: Create Follow-Up
+    alert(`Ticket ${email.ticketNumber} put on hold for missing documents.`);
+    // TODO: Connect to webhook "Update Status -> PENDING_DOCS"
   };
 
   const handleMarkAsDone = (email) => {
     // Action: Archive / Close
-    alert(`Ticket ${email.ticketNumber} clôturé avec succès !`);
+    alert(`Ticket ${email.ticketNumber} closed successfully!`);
     setEmails(
       emails.map((e) => (e.id === email.id ? { ...e, status: "read" } : e))
     );
   };
 
-  // --- FILTRAGE ET TRI (CORRIGÉ POUR URGENCES) ---
+  // --- FILTERING AND SORTING (URGENCY FIXED) ---
   const getFilteredEmails = () => {
     let filtered = [];
 
-    // 1. Filtrage (Vue Manager vs Vue Agent)
+    // 1. Filtering (Manager View vs Agent View)
     if (currentView === "dashboard") {
       return [];
     } else if (currentView === "all_inbox") {
-      filtered = emails; // Tout le monde [cite: 137]
+      filtered = emails; // Everyone
     } else {
-      // Vue Département (ex: Housing Office)
+      // Department View (ex: Housing Office)
       const activeDept = departmentRouting.find((d) => d.id === currentView);
       if (activeDept) {
         filtered = emails.filter((e) =>
@@ -226,7 +224,7 @@ function App() {
       }
     }
 
-    // 2. TRI PAR PRIORITÉ (URGENT EN PREMIER)
+    // 2. PRIORITY SORTING (URGENT FIRST)
     // Urgent(3) > Important(2) > Low(1) > Date
     const priorityWeight = { urgent: 3, important: 2, low: 1 };
 
@@ -234,17 +232,17 @@ function App() {
       const weightA = priorityWeight[a.priority] || 0;
       const weightB = priorityWeight[b.priority] || 0;
 
-      // Si priorités différentes, le plus urgent passe en premier
+      // If priorities differ, the more urgent one comes first
       if (weightA !== weightB) return weightB - weightA;
 
-      // Si même priorité, le plus récent passe en premier
+      // If same priority, the most recent one comes first
       return new Date(b.time) - new Date(a.time);
     });
   };
 
   const filteredEmails = getFilteredEmails();
 
-  // --- STATS DASHBOARD ---
+  // --- DASHBOARD STATS ---
   const categoryStats = Object.keys(categoryIcons)
     .map((cat) => ({
       name: cat,
@@ -258,7 +256,7 @@ function App() {
     return emails.filter((e) => categories.includes(e.category)).length;
   };
 
-  // --- COMPOSANTS UI ---
+  // --- UI COMPONENTS ---
   const SimpleBarChart = ({ data }) => {
     const maxValue = Math.max(...data.map((d) => d.value), 1);
     return (
@@ -301,7 +299,7 @@ function App() {
     );
   };
 
-  // --- RENDU PRINCIPAL ---
+  // --- MAIN RENDER ---
   return (
     <div
       className="app"
@@ -347,7 +345,7 @@ function App() {
               <Brain size={20} color="white" />
             </div>
             <h1 style={{ fontSize: "1.1rem", fontWeight: "600" }}>
-              ClassifIA Admin
+              ClassifAI Admin
             </h1>
           </div>
         </div>
@@ -419,7 +417,7 @@ function App() {
             overflowY: "auto",
           }}
         >
-          {/* Section Manager */}
+          {/* Manager Section */}
           <button
             onClick={() => setCurrentView("dashboard")}
             style={{
@@ -436,7 +434,8 @@ function App() {
               width: "100%",
             }}
           >
-            <LayoutDashboard size={18} /> {sidebarOpen && "Vue Manager (Stats)"}
+            <LayoutDashboard size={18} />{" "}
+            {sidebarOpen && "Manager View (Stats)"}
           </button>
 
           <button
@@ -458,7 +457,7 @@ function App() {
             <div
               style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}
             >
-              <Layers size={18} /> {sidebarOpen && "Boîte Globale"}
+              <Layers size={18} /> {sidebarOpen && "Global Inbox"}
             </div>
             {sidebarOpen && (
               <span style={{ fontSize: "0.75rem", opacity: 0.7 }}>
@@ -467,7 +466,7 @@ function App() {
             )}
           </button>
 
-          {/* Section Départements */}
+          {/* Departments Section */}
           {sidebarOpen && (
             <div
               style={{
@@ -478,7 +477,7 @@ function App() {
                 textTransform: "uppercase",
               }}
             >
-              Routage Départements
+              Department Routing
             </div>
           )}
 
@@ -536,7 +535,7 @@ function App() {
                 height: "100%",
               }}
             >
-              {/* LISTE DES TICKETS (TRIÉE) */}
+              {/* TICKET LIST (SORTED) */}
               <div
                 style={{
                   background: "white",
@@ -557,9 +556,9 @@ function App() {
                   }}
                 >
                   {currentView === "all_inbox"
-                    ? "Tous les tickets"
+                    ? "All Tickets"
                     : departmentRouting.find((d) => d.id === currentView)
-                        ?.label || "Liste"}
+                        ?.label || "List"}
                   <span
                     style={{
                       fontSize: "0.8rem",
@@ -581,7 +580,7 @@ function App() {
                       fontSize: "0.9rem",
                     }}
                   >
-                    Aucun ticket dans ce dossier.
+                    No tickets in this folder.
                   </div>
                 ) : (
                   filteredEmails.map((email) => (
@@ -665,7 +664,7 @@ function App() {
                 )}
               </div>
 
-              {/* DÉTAIL DU TICKET */}
+              {/* TICKET DETAIL */}
               <div
                 style={{
                   background: "white",
@@ -683,7 +682,7 @@ function App() {
                       height: "100%",
                     }}
                   >
-                    {/* EN-TÊTE */}
+                    {/* HEADER */}
                     <div
                       style={{
                         borderBottom: "1px solid #eee",
@@ -705,13 +704,13 @@ function App() {
                         }}
                       >
                         <span>
-                          De: <strong>{selectedEmail.from}</strong>
+                          From: <strong>{selectedEmail.from}</strong>
                         </span>
-                        <span>Réf: {selectedEmail.ticketNumber}</span>
+                        <span>Ref: {selectedEmail.ticketNumber}</span>
                       </div>
                     </div>
 
-                    {/* BLOC ANALYSE IA (Justification & Routage) */}
+                    {/* AI ANALYSIS BLOCK (Reasoning & Routing) */}
                     <div
                       style={{
                         background: "#f0f9ff",
@@ -731,7 +730,7 @@ function App() {
                           gap: "0.5rem",
                         }}
                       >
-                        <Brain size={16} /> Analyse de l'Assistant
+                        <Brain size={16} /> Assistant Analysis
                       </h4>
                       <div
                         style={{
@@ -749,7 +748,7 @@ function App() {
                               color: "#444",
                             }}
                           >
-                            Justification IA
+                            AI Reasoning
                           </strong>
                           <p
                             style={{
@@ -774,7 +773,7 @@ function App() {
                               color: "#444",
                             }}
                           >
-                            Routage Suggéré
+                            Suggested Routing
                           </strong>
                           <div
                             style={{
@@ -807,7 +806,7 @@ function App() {
                       </div>
                     </div>
 
-                    {/* CONTENU MESSAGE */}
+                    {/* MESSAGE CONTENT */}
                     <div
                       style={{
                         whiteSpace: "pre-wrap",
@@ -821,7 +820,7 @@ function App() {
                       {selectedEmail.fullContent}
                     </div>
 
-                    {/* BARRE D'ACTIONS (Selon Tech Doc p.4 & p.5) */}
+                    {/* ACTION BAR (According to Tech Doc p.4 & p.5) */}
                     <div
                       style={{
                         display: "flex",
@@ -831,7 +830,7 @@ function App() {
                         paddingTop: "1.5rem",
                       }}
                     >
-                      {/* 1. Réponse Auto (Pour Low/Standard) */}
+                      {/* 1. Auto Reply (For Low/Standard) */}
                       <button
                         onClick={() => handleAutoReply(selectedEmail)}
                         style={{
@@ -846,10 +845,10 @@ function App() {
                           fontSize: "0.9rem",
                         }}
                       >
-                        ✉️ Réponse Auto
+                        ✉️ Auto Reply
                       </button>
 
-                      {/* 2. Créer Suivi (Pour Missing Docs) */}
+                      {/* 2. Create Follow-Up (For Missing Docs) */}
                       <button
                         onClick={() => handleFollowUp(selectedEmail)}
                         style={{
@@ -868,10 +867,10 @@ function App() {
                           gap: "0.5rem",
                         }}
                       >
-                        <Clock size={18} /> Créer Suivi
+                        <Clock size={18} /> Create Follow-Up
                       </button>
 
-                      {/* 3. Marquer Traité (Pour Clôture) */}
+                      {/* 3. Mark as Done (For Closing) */}
                       <button
                         onClick={() => handleMarkAsDone(selectedEmail)}
                         style={{
@@ -890,7 +889,7 @@ function App() {
                           gap: "0.5rem",
                         }}
                       >
-                        <CheckCircle size={18} /> Traité
+                        <CheckCircle size={18} /> Mark as Done
                       </button>
                     </div>
                   </div>
@@ -909,7 +908,7 @@ function App() {
                       size={48}
                       style={{ marginBottom: "1rem", opacity: 0.3 }}
                     />
-                    <p>Sélectionnez un ticket pour voir l'analyse.</p>
+                    <p>Select a ticket to view analysis.</p>
                   </div>
                 )}
               </div>
@@ -917,9 +916,7 @@ function App() {
           ) : (
             /* DASHBOARD MANAGER VIEW */
             <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
-              <h2 style={{ marginBottom: "1.5rem" }}>
-                Tableau de bord (Manager)
-              </h2>
+              <h2 style={{ marginBottom: "1.5rem" }}>Dashboard (Manager)</h2>
               <div
                 style={{
                   display: "grid",
@@ -964,7 +961,7 @@ function App() {
                       marginBottom: "0.5rem",
                     }}
                   >
-                    Urgences (Rouge)
+                    Urgent (Red)
                   </div>
                   <div
                     style={{
@@ -991,7 +988,7 @@ function App() {
                       marginBottom: "0.5rem",
                     }}
                   >
-                    Sentiment Négatif
+                    Negative Sentiment
                   </div>
                   <div
                     style={{
@@ -1013,7 +1010,7 @@ function App() {
                 }}
               >
                 <h3 style={{ marginBottom: "1.5rem", fontSize: "1.1rem" }}>
-                  Volume par Catégorie
+                  Volume by Category
                 </h3>
                 <SimpleBarChart data={categoryStats} />
               </div>
@@ -1022,7 +1019,7 @@ function App() {
         </main>
       </div>
 
-      {/* MODAL RÉPONSE AUTO */}
+      {/* AUTO REPLY MODAL */}
       {showAutoReplyModal && (
         <div
           style={{
@@ -1048,7 +1045,7 @@ function App() {
               boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
             }}
           >
-            <h3 style={{ marginBottom: "1rem" }}>Brouillon généré par l'IA</h3>
+            <h3 style={{ marginBottom: "1rem" }}>AI Generated Draft</h3>
             <div
               style={{
                 background: "#f5f5f7",
@@ -1082,11 +1079,11 @@ function App() {
                   cursor: "pointer",
                 }}
               >
-                Annuler
+                Cancel
               </button>
               <button
                 onClick={() => {
-                  alert("Email envoyé !");
+                  alert("Email sent!");
                   setShowAutoReplyModal(false);
                 }}
                 style={{
@@ -1098,7 +1095,7 @@ function App() {
                   cursor: "pointer",
                 }}
               >
-                Envoyer
+                Send
               </button>
             </div>
           </div>
